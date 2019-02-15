@@ -35,11 +35,14 @@ readTag (Stored ptr) = Tagged
 readStorable :: Storable a => Stored a -> a
 readStorable (Stored ptr) = unsafePeek ptr
 
-pattern StoredNothing :: Tagged (Maybe a)
-pattern StoredNothing <- (Tagged 0 _)
+-- TODO: check that GHC common subexpression elimination kicks in for
+-- readTag.
 
-pattern StoredJust :: Stored a -> Tagged (Maybe a)
-pattern StoredJust a <- (Tagged 1 (Stored -> a))
+pattern StoredNothing :: Stored (Maybe a)
+pattern StoredNothing <- (readTag -> Tagged 0 _)
+
+pattern StoredJust :: Stored a -> Stored (Maybe a)
+pattern StoredJust a <- (readTag -> Tagged 1 (Stored -> a))
 
 {-# COMPLETE StoredNothing, StoredJust #-}
 
@@ -51,10 +54,9 @@ testMaybeInt mx = do
     when (decoded /= mx) $ error "Mismatch?!"
 
 readMaybeInt :: Stored (Maybe Int) -> Maybe Int
-readMaybeInt s =
-  case readTag s of
-    StoredNothing -> Nothing
-    StoredJust (readStorable -> x) -> Just x
+readMaybeInt = \case
+  StoredNothing -> Nothing
+  StoredJust (readStorable -> x) -> Just x
 
 serializeMaybeInt :: Maybe Int -> ByteString
 serializeMaybeInt = \case
