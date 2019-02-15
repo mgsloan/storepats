@@ -14,10 +14,14 @@ description:         Please see the README on GitHub at <https://github.com/mgsl
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
 - template-haskell
 
 library:
   source-dirs: src
+
+ghc-options:
+- -Wall
 
 tests:
   storepats-test:
