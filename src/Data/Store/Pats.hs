@@ -1,9 +1,7 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE RoleAnnotations #-}
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Data.Store.Pats where
 
@@ -12,28 +10,10 @@ import Data.ByteString (ByteString)
 import Data.Coerce (coerce)
 import Data.Word (Word8)
 import Foreign.ForeignPtr (withForeignPtr)
-import Foreign.Ptr (Ptr, plusPtr)
-import Foreign.Storable (Storable, sizeOf, peek, poke)
-import System.IO.Unsafe (unsafePerformIO)
+import Foreign.Ptr (plusPtr)
+import Foreign.Storable (sizeOf, poke)
 import qualified Data.ByteString.Internal as BS
-
-type role Stored nominal
-newtype Stored a = Stored (Ptr Word8)
-
-type role Tagged nominal
-data Tagged a = Tagged
-  { taggedTag :: {-# UNPACK #-} !Word8
-  , taggedPtr :: {-# UNPACK #-} !(Ptr Word8)
-  }
-
-readTag :: Stored a -> Tagged a
-readTag (Stored ptr) = Tagged
-  { taggedTag = unsafePeek ptr
-  , taggedPtr = ptr `plusPtr` sizeOf (undefined :: Word8)
-  }
-
-readStorable :: Storable a => Stored a -> a
-readStorable (Stored ptr) = unsafePeek ptr
+import Data.Store.Pats.Internal
 
 pattern StoredNothing :: Stored (Maybe a)
 pattern StoredNothing <- (readTag -> Tagged 0 _)
@@ -61,6 +41,3 @@ serializeMaybeInt = \case
   Just x -> BS.unsafeCreate 5 $ \ptr -> do
     poke ptr 1
     poke (coerce (ptr `plusPtr` sizeOf (undefined :: Word8))) x
-
-unsafePeek :: Storable a => Ptr Word8 -> a
-unsafePeek = unsafePerformIO . peek . coerce
