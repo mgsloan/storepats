@@ -35,9 +35,6 @@ readTag (Stored ptr) = Tagged
 readStorable :: Storable a => Stored a -> a
 readStorable (Stored ptr) = unsafePeek ptr
 
--- TODO: check that GHC common subexpression elimination kicks in for
--- readTag.
-
 pattern StoredNothing :: Stored (Maybe a)
 pattern StoredNothing <- (readTag -> Tagged 0 _)
 
