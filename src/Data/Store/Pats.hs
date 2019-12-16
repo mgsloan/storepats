@@ -38,3 +38,14 @@ serializeMaybeInt = \case
   Just x -> BS.unsafeCreate 5 $ \ptr -> do
     poke ptr 1
     poke (coerce (ptr `plusPtr` sizeOf (undefined :: Word8))) x
+
+{- Old experiment
+
+data Exp
+
+pattern AppE :: Stored Exp -> Stored Exp -> Stored Exp
+pattern AppE l r <- (readTag -> TagAndBytes 0 ((\bs -> (readField bs 1, readLastField bs 5)) -> (l, r)))
+
+-- $(makePats ''Pat)
+
+-}
